@@ -5,10 +5,6 @@ DocTestSetup = quote
 end
 ```
 
-```@contents
-Pages = ["affine_algebras.md"]
-```
-
 # Affine Algebras and Their Ideals
 
 With regard to notation, we use *affine algebra* as a synonym for *quotient of a multivariate polynomial ring by an ideal*.
@@ -499,7 +495,7 @@ subalgebra_membership(f::T, V::Vector{T}) where T <: Union{MPolyRingElem, MPolyQ
 ### Minimal Subalgebra Generators
 
 ```@docs
-minimal_subalgebra_generators(V::Vector{T}) where T <: Union{MPolyRingElem, MPolyQuoRingElem}
+minimal_subalgebra_generators(V::Vector{T}; check::Bool = true) where {T <: Union{MPolyDecRingElem, MPolyQuoRingElem{<: MPolyDecRingElem}}}
 ```
 
 ## Noether Normalization
@@ -651,7 +647,7 @@ degree(A::MPolyQuoRing)
 ### Positive Gradings in General
 
 ```@docs
-multi_hilbert_series(A::MPolyQuoRing; alg::Symbol=:BayerStillmanA)
-multi_hilbert_series_reduced(A::MPolyQuoRing; alg::Symbol=:BayerStillmanA)
+multi_hilbert_series(A::MPolyQuoRing; algorithm::Symbol=:BayerStillmanA)
+multi_hilbert_series_reduced(A::MPolyQuoRing; algorithm::Symbol=:BayerStillmanA)
 multi_hilbert_function(A::MPolyQuoRing, g::GrpAbFinGenElem)
 ```

@@ -5,10 +5,6 @@ DocTestSetup = quote
 end
 ```
 
-```@contents
-Pages = ["fans.md"]
-```
-
 # Polyhedral Fans
 
 ## Introduction
@@ -29,7 +25,7 @@ To construct a polyhedral fan, you must pass the rays of each cone in the fan,
 along with an `IncidenceMatrix` encoding which rays generate which cones.
 
 ```@docs
-PolyhedralFan(Rays::Union{Oscar.MatElem,AbstractMatrix}, Incidence::IncidenceMatrix)
+PolyhedralFan
 polyhedral_fan_from_rays_action
 ```
 

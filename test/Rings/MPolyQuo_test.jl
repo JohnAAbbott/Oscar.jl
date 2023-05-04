@@ -117,7 +117,8 @@ end
   I = ideal(R, [ x*y ])
   Q, RtoQ = quo(R, I)
   J = ideal(Q, [ x^3 + x*y, y, x^2 + y ])
-  @test minimal_generating_set(J) == [ Q(y), Q(x^2 + y) ]
+  @test minimal_generating_set(J) == [ Q(y), Q(x^2) ]
+  @test isdefined(J, :gb)
   @test minimal_generating_set(ideal(Q, [ Q() ])) == elem_type(Q)[]
 
   # 1530
@@ -215,4 +216,14 @@ end
   @test iszero(Q(x) * A(u))
   @test iszero(A(u) * A(u))
   @test iszero(A(x)*u)
+end
+
+@testset "issue #2292" begin
+  R, (x, y, z) = graded_polynomial_ring(QQ, ["x", "y", "z"])
+  A, p = quo(R, ideal(R, [x-y]))
+  V = [x, z^2, x^3+y^3, y^4, y*z^5]
+  a = ideal(A, V)
+  dim(a) # cashes a.gb
+  gens(a.gb)
+  @test a.gb.gens.O == MPolyDecRingElem[y, z^2]
 end
