@@ -270,6 +270,7 @@ export betti
 export betti_number
 export betti_numbers
 export betti_table
+export billera_lee_polytope
 export binomial_exponents_to_ideal
 export binomial_primary_decomposition
 export bipyramid
@@ -338,6 +339,7 @@ export cohyperplanes
 export cokernel
 export collector
 export coloops
+export column
 export combinatorial_symmetries
 export comm
 export comm!
@@ -1124,6 +1126,7 @@ export radical_membership
 export rand
 export rand_pseudo
 export rand_spherical_polytope
+export rand_subpolytope
 export random_affine_linear_polynomials
 export rank
 export rank_action
@@ -1188,6 +1191,7 @@ export ring_elem_type
 export ring_type
 export rising_factorial
 export root
+export row
 export saturated_ideal
 export saturation
 export saturation_with_index
