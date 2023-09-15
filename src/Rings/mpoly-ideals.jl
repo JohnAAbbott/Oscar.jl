@@ -54,6 +54,12 @@ function ideal(g::Vector{T}) where {T <: MPolyRingElem}
   return ideal(parent(g[1]), g)
 end
 
+# Coerce an ungraded ideal in a graded ring
+function ideal(S::MPolyDecRing, I::MPolyIdeal)
+  @req base_ring(I) === forget_grading(S) "Rings do not coincide"
+  return ideal(S, [ S(f) for f in gens(I) ])
+end
+
 function is_graded(I::MPolyIdeal)
   return is_graded(Hecke.ring(I))
 end
@@ -1305,7 +1311,12 @@ julia> codim(I)
 2
 ```
 """
-codim(I::MPolyIdeal) = nvars(base_ring(I)) - dim(I)
+codim(I::MPolyIdeal{T}) where {T<:MPolyElem{<:FieldElem}}= nvars(base_ring(I)) - dim(I)
+codim(I::MPolyIdeal) = dim(base_ring(I)) - dim(I)
+
+# Some fixes which were necessary for the above
+dim(R::MPolyRing) = dim(base_ring(R)) + nvars(R)
+dim(R::ZZRing) = 1
 
 
 ################################################################################

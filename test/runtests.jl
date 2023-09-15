@@ -6,6 +6,9 @@ import Random
 
 numprocs_str = get(ENV, "NUMPROCS", "1")
 
+oldWorkingDirectory = pwd()
+cd(joinpath(pkgdir(Oscar), "test"))
+
 if !isempty(ARGS)
   jargs = [arg for arg in ARGS if startswith(arg, "-j")]
   if !isempty(jargs)
@@ -103,7 +106,8 @@ end
 
 println("Making test list")
 
-const testlist = [
+testlist = [
+  
   "Aqua.jl",
 
   "printing.jl",
@@ -118,17 +122,6 @@ const testlist = [
 
   "NumberTheory/nmbthy.jl",
   "NumberTheory/galthy.jl",
-
-# Will automatically include all experimental packages following our
-# guidelines.
-
-  "../experimental/runtests.jl",
-
-  "Experimental/gmodule.jl",
-  "Experimental/ModStdQt.jl",
-  "Experimental/ModStdNF.jl",
-  "Experimental/MatrixGroups.jl",
-  "Experimental/ExteriorAlgebra.jl",
   
   "Rings/ReesAlgebra.jl",
 
@@ -143,6 +136,20 @@ const testlist = [
   "TropicalGeometry/runtests.jl",
 
   "Serialization/runtests.jl",
+
+  # Will automatically include all experimental packages following our
+# guidelines.
+
+  "../experimental/runtests.jl",
+
+  "Experimental/gmodule.jl",
+  "Experimental/ModStdQt.jl",
+  "Experimental/ModStdNF.jl",
+  "Experimental/MatrixGroups.jl",
+  "Experimental/ExteriorAlgebra.jl",
+
+
+  "Data/runtests.jl",
 
   "StraightLinePrograms/runtests.jl"
 ]
@@ -167,3 +174,5 @@ if numprocs == 1
     print_stats(stdout; max=10)
   end
 end
+
+cd(oldWorkingDirectory)

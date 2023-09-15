@@ -1302,6 +1302,40 @@ end
 # Betti table
 ###############################################################################
 
+@doc raw"""
+    betti_table(F::FreeResolution)
+
+Given a $\mathbb Z$-graded free resolution `F`, return the graded Betti numbers 
+of `F` in form of a Betti table.
+
+Alternatively, use `betti`.
+
+# Examples
+```julia
+julia> R, (w, x, y, z) = graded_polynomial_ring(QQ, ["w", "x", "y", "z"]);
+
+julia> I = ideal(R, [x*z, y*z, x*w^2, y*w^2])
+ideal(x*z, y*z, w^2*x, w^2*y)
+
+julia> A, _= quo(R, I)
+(Quotient of multivariate polynomial ring by ideal with 4 generators, Map from
+R to A defined by a julia-function with inverse)
+
+julia> FA  = free_resolution(A)
+Free resolution of A
+R^1 <---- R^4 <---- R^4 <---- R^1 <---- 0
+0         1         2         3         4
+
+julia> betti_table(FA)
+       0  1  2  3
+------------------
+0    : 1  -  -  -
+1    : -  2  1  -
+2    : -  2  3  1
+------------------
+total: 1  4  4  1
+```
+"""
 function betti_table(F::FreeResolution; project::Union{GrpAbFinGenElem, Nothing} = nothing, reverse_direction::Bool=false)
   generator_count = Dict{Tuple{Int, Any}, Int}()
   C = F.C
@@ -1318,8 +1352,8 @@ function betti_table(F::FreeResolution; project::Union{GrpAbFinGenElem, Nothing}
   return BettiTable(generator_count, project = project, reverse_direction = reverse_direction)
 end
 
-function betti(b::FreeResolution; reverse_direction::Bool = false)
-  return betti_table(b, project = nothing, reverse_direction = reverse_direction)
+function betti(b::FreeResolution; project::Union{GrpAbFinGenElem, Nothing} = nothing, reverse_direction::Bool = false)
+  return betti_table(b; project, reverse_direction)
 end
 
 function as_dictionary(b::BettiTable)
@@ -1358,7 +1392,7 @@ function Base.show(io::IO, b::BettiTable)
       ngens(parent(x[1][2])) > 1 && println(io, "Betti Table for component ", i)
       print(io, " "^(s2 + (7 - s2)))
       for j in min:step:max
-        print(io, j, " "^(spaces - ndigits(j) + 1))
+        print(io, j, j == max ? "" : " "^(spaces - ndigits(j) + 1))
       end
       print(io, "\n")
       divider_width = 6 + (b.reverse_direction ? (min - max) + 1 : (max - min) + 1) * (spaces + 1)
@@ -1373,7 +1407,7 @@ function Base.show(io::IO, b::BettiTable)
         for h in min:step:max
           sum_current = sum([getindex(T, x[k]) for k in 1:length(x) if x[k][1] == h && x[k][2][i] == j])
           print(io, sum_current == 0 ? "-" : sum_current)
-          print(io, " "^(spaces - (sum_current == 0 ? 0 : ndigits(sum_current)) + (sum_current == 0 ? 0 : 1)))
+          h == max || print(io, " "^(spaces - (sum_current == 0 ? 0 : ndigits(sum_current)) + (sum_current == 0 ? 0 : 1)))
         end
         print(io,"\n")
       end
@@ -1381,7 +1415,7 @@ function Base.show(io::IO, b::BettiTable)
       print(io, "\n", "total: ")
       for i_total in min:step:max
         sum_row = sum(getindex(T, x[j]) for j in 1:length(x) if x[j][1] == i_total)
-        print(io, sum_row, " "^(spaces - ndigits(sum_row) + 1))
+        print(io, sum_row, i_total == max ? "" : " " ^ (spaces - ndigits(sum_row) + 1))
       end
       print(io, "\n")
     end
@@ -1933,7 +1967,45 @@ end
 ########################################################################
 
 # TODO: Are the signatures sufficient to assure that the modules are graded?
+
+@doc raw"""
+    minimal_betti_table(M::ModuleFP{T}) where {T<:MPolyDecRingElem}
+    minimal_betti_table(A::MPolyQuoRing{T}) where {T<:MPolyDecRingElem}
+    minimal_betti_table(I::MPolyIdeal{T}) where {T<:MPolyDecRingElem} 
+
+Given a finitely presented graded module `M` over a standard $\mathbb Z$-graded 
+multivariate polynomial ring with coefficients in a field, return the Betti Table
+of the minimal free resolution of `M`. Similarly for `A` and `I`.
+
+# Examples
+```julia
+julia> R, (w, x, y, z) = graded_polynomial_ring(QQ, ["w", "x", "y", "z"]);
+
+julia> I = ideal(R, [w^2-x*z, w*x-y*z, x^2-w*y, x*y-z^2, y^2-w*z]);
+
+julia> A, _ = quo(R, I)
+(Quotient of multivariate polynomial ring by ideal with 5 generators, Map from
+R to A defined by a julia-function with inverse)
+
+julia> minimal_betti_table(A)
+       0  1  2  3
+------------------
+0    : 1  -  -  -
+1    : -  5  5  -
+2    : -  -  -  1
+------------------
+total: 1  5  5  1
+```
+"""
+function minimal_betti_table(M::ModuleFP{T}) where {T<:MPolyDecRingElem}
+ error("Not implemented for the given type")
+end
+
 function minimal_betti_table(M::SubquoModule{T}) where {T<:MPolyDecRingElem}
+  return minimal_betti_table(free_resolution(M))
+end
+
+function minimal_betti_table(F::FreeMod{T}) where {T<:MPolyDecRingElem}
   return minimal_betti_table(free_resolution(M))
 end
 
@@ -1945,49 +2017,52 @@ function minimal_betti_table(I::MPolyIdeal{T}) where {T<:MPolyDecRingElem}
   return minimal_betti_table(free_resolution(I))
 end
 
-#=
- The examples below don't run because of a bug in the documenter. 
- We can put them back in, once that works.
+
+
+@doc raw"""
+    minimal_betti_table(F::FreeResolution{T}) where {T<:ModuleFP}
+
+Given a graded free resolution `F` over a standard $\mathbb Z$-graded 
+multivariate polynomial ring with coefficients in a field, return the
+Betti table of the minimal free resolution arising from `F`.
+
+!!! note
+    The algorithm proceeds without actually minimizing the resolution.
 
 # Examples
-```jldoctest
-julia> R, _ = polynomial_ring(QQ, [:w, :x, :y, :z]);
+```julia
+julia> R, (w, x, y, z) = graded_polynomial_ring(QQ, ["w", "x", "y", "z"]);
 
-julia> R, (w, x, y, z) = grade(R)
-(Graded multivariate polynomial ring in 4 variables over QQ, MPolyDecRingElem{QQFieldElem, QQMPolyRingElem}[w, x, y, z])
-
-julia> I = ideal(R, [w^2 - x*z, w*x - y*z, x^2 - w*y, x*y - z^2, y^2 - w*z])
-ideal(w^2 - x*z, w*x - y*z, -w*y + x^2, x*y - z^2, -w*z + y^2)
+julia> I = ideal(R, [w^2-x*z, w*x-y*z, x^2-w*y, x*y-z^2, y^2-w*z]);
 
 julia> A, _ = quo(R, I)
 (Quotient of multivariate polynomial ring by ideal with 5 generators, Map from
 R to A defined by a julia-function with inverse)
 
-julia> betti_table(free_resolution(A))
-       0  1  2  3
-------------------
-0    : 1  -  -  -
-1    : -  5  5  1
-2    : -  -  1  1
-------------------
-total: 1  5  6  2
+julia> FA = free_resolution(A)
+Free resolution of A
+R^1 <---- R^5 <---- R^6 <---- R^2 <---- 0
+0         1         2         3         4
 
-julia> minimal_betti_table(free_resolution(A))
-       0  1  2  3
+julia> betti_table(FA)
+       0  1  2  3  
 ------------------
-0    : 1  -  -  -
-1    : -  5  5  -
-2    : -  -  -  1
+0    : 1  -  -  -  
+1    : -  5  5  1  
+2    : -  -  1  1  
 ------------------
-total: 1  5  5  1
+total: 1  5  6  2  
 
+
+julia> minimal_betti_table(FA)
+       0  1  2  3  
+------------------
+0    : 1  -  -  -  
+1    : -  5  5  -  
+2    : -  -  -  1  
+------------------
+total: 1  5  5  1  
 ```
-"""
-=#
-@doc raw"""
-    minimal_betti_table(res::FreeResolution{T}) where {T<:ModuleFP}
-
-The Betti table of a minimized version of `res` without actually computing a minimalization.
 """
 function minimal_betti_table(res::FreeResolution{T}) where {T<:ModuleFP}
   @assert is_standard_graded(base_ring(res)) "resolution must be defined over a standard graded ring"
@@ -2010,10 +2085,12 @@ function minimal_betti_table(res::FreeResolution{T}) where {T<:ModuleFP}
       if d in dom_degs
         _, _, sub_mat = _constant_sub_matrix(phi, d)
         r = rank(sub_mat)
-        betti_hash_table[(i-1, d)] = ncols(sub_mat) - r - get(offsets, d, 0)
+        c = ncols(sub_mat) - r - get(offsets, d, 0)
+        !iszero(c) && (betti_hash_table[(i-1, d)] = c)
         offsets[d] = r
       else
-        betti_hash_table[(i-1, d)] = length(_indices_of_generators_of_degree(G, d)) - get(offsets, d, 0)
+        c = length(_indices_of_generators_of_degree(G, d)) - get(offsets, d, 0)
+        !iszero(c) && (betti_hash_table[(i-1, d)] = c)
       end
     end
   end
@@ -2155,15 +2232,15 @@ function  truncate(I::ModuleFP, d::Int, task::Symbol = :with_morphism)
   s = dmin
   B = monomial_basis(R, d-s)
   for i = 1:length(V)
-       if degree(Int, V[i]) < d
-          if degree(Int, V[i]) > s
-             s = degree(Int, V[i])
-	     B = monomial_basis(R, d-s)
-	  end
-	     append!(RES, [x*V[i] for x in B])
-       else
-           push!(RES, V[i])
-       end
+    if degree(Int, V[i]) < d
+      if degree(Int, V[i]) > s
+        s = degree(Int, V[i])
+        B = monomial_basis(R, d-s)
+      end
+      append!(RES, [x*V[i] for x in B])
+    else
+      push!(RES, V[i])
+    end
   end
   return sub(I, RES, task) 
 end
@@ -2175,10 +2252,17 @@ end
     cm_regularity(M::ModuleFP)
 
 Given a finitely presented graded module `M` over a standard $\mathbb Z$-graded 
-multivariate polynomial ring, return the Castelnuovo-Mumford regularity of `M`.
- 
+multivariate polynomial ring with coefficients in a field, return the
+Castelnuovo-Mumford regularity of `M`.
+
+    cm_regularity(I::MPolyIdeal)
+
+Given a (homogeneous) ideal `I` in a standard $\mathbb Z$-graded 
+multivariate polynomial ring with coefficients in a field, return the
+Castelnuovo-Mumford regularity of `I`.
+
 # Examples
-```jldoctest
+```julia
 julia> R, (x, y, z) = graded_polynomial_ring(QQ, ["x", "y", "z"]);
 
 julia> F = graded_free_module(R, 1);
@@ -2196,7 +2280,33 @@ Homogeneous module homomorphism)
 julia> cm_regularity(M)
 3
 
-julia> minimal_betti_table(M);
+julia> minimal_betti_table(M)
+       0 1 2 3 
+--------------
+0    : 1 - - - 
+1    : - 3 - - 
+2    : - - 3 - 
+3    : - - - 1 
+--------------
+total: 1 3 3 1 
+```
+```julia
+julia> R, (w, x, y, z) = graded_polynomial_ring(QQ, ["w", "x", "y", "z"]);
+
+julia> I = ideal(R, [-x*z+y^2, x*y-w*z, x^2-w*y]);
+
+julia> cm_regularity(I)
+2
+
+julia> A, _ = quo(R, I);
+
+julia> minimal_betti_table(A)
+       0 1 2 
+------------
+0    : 1 - - 
+1    : - 3 2 
+------------
+total: 1 3 2 
 ```
 """
 function cm_regularity(M::ModuleFP)
@@ -2204,14 +2314,109 @@ function cm_regularity(M::ModuleFP)
 end
 
 function cm_regularity(M::FreeMod)
-   @req is_standard_graded(base_ring(M)) "The base ring is not standard ZZ-graded"
+   R = base_ring(M)
+   @req coefficient_ring(R) isa AbstractAlgebra.Field "The coefficient ring must be a field"
+   @req is_standard_graded(R) "The base ring is not standard ZZ-graded"
    return 0
 end
 
 function cm_regularity(M::SubquoModule)
-   @req is_standard_graded(base_ring(M)) "The base ring is not standard ZZ-graded"
+   R = base_ring(M)
+   @req coefficient_ring(R) isa AbstractAlgebra.Field "The coefficient ring must be a field"
+   @req is_standard_graded(R) "The base ring is not standard ZZ-graded"
    B = minimal_betti_table(M)
    S = as_dictionary(B)
    V = [x[2][1] - x[1] for x in keys(S)] 
   return maximum(V)
+end
+
+#####affine algebras as modules#####
+
+@doc raw"""
+    quotient_ring_as_module(A::MPolyQuoRing)
+
+Return `A` considered as an object of type `SubquoModule`.
+
+    quotient_ring_as_module(I::MPolyIdeal)
+
+As above, where `A` is the quotient of `base_ring(I)` modulo `I`.
+
+# Examples
+```jldoctest
+julia> R, (x, y) = polynomial_ring(QQ, ["x", "y"]);
+
+julia> I = ideal(R, [x^2, y^3])
+ideal(x^2, y^3)
+
+julia> quotient_ring_as_module(I)
+Subquotient of Submodule with 1 generator
+1 -> e[1]
+by Submodule with 2 generators
+1 -> x^2*e[1]
+2 -> y^3*e[1]
+```
+```jldoctest
+julia> S, (x, y) = graded_polynomial_ring(QQ, ["x", "y"]);
+
+julia> I = ideal(S, [x^2, y^3])
+ideal(x^2, y^3)
+
+julia> quotient_ring_as_module(I)
+Graded subquotient of submodule of S^1 generated by
+1 -> e[1]
+by submodule of S^1 generated by
+1 -> x^2*e[1]
+2 -> y^3*e[1]
+
+```
+"""
+function quotient_ring_as_module(A::MPolyQuoRing)
+  return quotient_ring_as_module(modulus(A))
+end
+
+function quotient_ring_as_module(I::MPolyIdeal)
+  R = base_ring(I)
+  F = is_graded(R) ? graded_free_module(R, 1) : free_module(R, 1)
+  e1 = F[1]
+  return quo(F, [x * e1 for x = gens(I)], :module)
+end
+
+#####ideals as modules#####
+
+@doc raw"""
+    ideal_as_module(I::MPolyIdeal)
+
+Return `I` considered as an object of type `SubquoModule`.
+
+# Examples
+```jldoctest
+julia> R, (x, y) = polynomial_ring(QQ, ["x", "y"]);
+
+julia> I = ideal(R, [x^2, y^3])
+ideal(x^2, y^3)
+
+julia> ideal_as_module(I)
+Submodule with 2 generators
+1 -> x^2*e[1]
+2 -> y^3*e[1]
+represented as subquotient with no relations.
+```
+```jldoctest
+julia> S, (x, y) = graded_polynomial_ring(QQ, ["x", "y"]);
+
+julia> I = ideal(S, [x^2, y^3])
+ideal(x^2, y^3)
+
+julia> ideal_as_module(I)
+Graded submodule of S^1
+1 -> x^2*e[1]
+2 -> y^3*e[1]
+represented as subquotient with no relations
+```
+"""
+function ideal_as_module(I::MPolyIdeal)
+  R = base_ring(I)
+  F = is_graded(R) ? graded_free_module(R, 1) : free_module(R, 1)
+  e1 = F[1]
+  return sub(F, [x * e1 for x = gens(I)], :module)
 end

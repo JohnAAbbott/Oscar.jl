@@ -151,7 +151,7 @@ end
         dim_test = dims[RR]
 
         if base_ring(R) isa AbstractAlgebra.Field
-	  if is_free(grading_group(RR))
+          if is_free(grading_group(RR))
              grp_elem = d_Elem
              H = homogeneous_component(RR, grp_elem)
              @test Oscar.has_relshp(H[1], RR) !== nothing
@@ -160,7 +160,7 @@ end
                @test (H[2].g)(RR(g)) == g
              end
              @test dim(H[1]) == dim_test #
-	  end
+          end
         end
         #H_quo = homogeneous_component(R_quo, grp_elem)
         #Oscar.has_relshp(H_quo[1], R_quo) !== nothing
@@ -323,6 +323,10 @@ end
   I = ideal(S, [ f ])
   @test forget_decoration(I) == ideal(R, [ x + y ])
   @test forget_grading(I) == ideal(R, [ x + y ])
+  @test ideal(S, forget_decoration(I)) == I
+
+  T, _ = graded_polynomial_ring(QQ, [ "t" ], [ 1 ])
+  @test_throws ArgumentError ideal(T, forget_decoration(I))
 end
 
 @testset "Verify homogenization bugfix" begin
@@ -506,4 +510,9 @@ let
   e = expand(1//(1 - x), 10)
   t = gen(parent(e))
   @test e == sum(t^i for i in 1:10; init = t^0)
+end
+
+@testset "is_positively_graded" begin
+  R, (x, y) = graded_polynomial_ring(QQ, ["x", "y"], [1, -1])
+  @test is_positively_graded(R) == false
 end

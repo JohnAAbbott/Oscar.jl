@@ -97,8 +97,8 @@ function __init__()
     add_verbose_scope(:EllipticSurface)
     add_assert_scope(:EllipticSurface)
 
-    add_verbose_scope(:RationalMap)
-    add_assert_scope(:RationalMap)
+    add_verbose_scope(:MorphismFromRationalFunctions)
+    add_assert_scope(:MorphismFromRationalFunctions)
 
     add_verbose_scope(:Glueing)
     add_assert_scope(:Glueing)
@@ -194,6 +194,7 @@ include("fallbacks.jl")
 
 
 include("Rings/Rings.jl")
+include("forward_declarations.jl")
 include("Groups/Groups.jl")
 
 include("GAP/GAP.jl")
@@ -227,6 +228,11 @@ include("TropicalGeometry/TropicalGeometry.jl")
 
 include("InvariantTheory/InvariantTheory.jl")
 
+# Serialization should always come at the end of Oscar source code
+# but before experimental, any experimental serialization should
+# be written inside the corresponding experimental code sub directory
+include("Serialization/main.jl")
+
 include("../experimental/Experimental.jl")
 
 include("Rings/binomial_ideals.jl") # uses QQAbModule from experimental/Rings/QQAbAndPChars.jl
@@ -238,14 +244,10 @@ if is_dev
   include("../examples/PrimDec.jl")
 end
 
-include("Serialization/main.jl")
 
 include("aliases.jl")
 
 include("deprecations.jl")
-
-const global OSCAR = Oscar
-const global oscar = Oscar
 
 @doc raw"""
 ANTIC is the project name for the number theoretic cornerstone of OSCAR, see

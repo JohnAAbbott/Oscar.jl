@@ -16,8 +16,6 @@ const oldexppkgs = [
 # DO NOT USE THIS UNLESS YOU KNOW THE CONSEQUENCES.
 # For more background, see https://github.com/oscar-system/Oscar.jl/issues/2300.
 const orderedpkgs = [
-  "ToricSchemes",
-  "FTheoryTools",
   "JuLie",
   "IntersectionTheory",
   "OrthogonalDiscriminants",  # needs code from JuLie
@@ -67,6 +65,6 @@ include("Schemes/Auxiliary.jl")
 include("Schemes/BlowupMorphism.jl")
 include("Schemes/duValSing.jl")
 include("Schemes/elliptic_surface.jl")
-include("Schemes/RationalMap.jl")
+include("Schemes/MorphismFromRationalFunctions.jl")
 
 include("ExteriorAlgebra/ExteriorAlgebra.jl")

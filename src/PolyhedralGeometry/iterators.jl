@@ -23,6 +23,9 @@ Base.firstindex(::PointVector) = 1
 Base.lastindex(iter::PointVector) = length(iter)
 Base.size(po::PointVector) = size(po.p)
 
+# Forward multiplication with oscar matrices.
+Base.:*(A::MatElem, v::PointVector) = A*v.p
+
 PointVector{U}(p::Union{Field, ZZRing}, v::AbstractVector) where U<:scalar_types_extended = PointVector{U}(p.(v))
 
 PointVector{U}(p::Union{Field, ZZRing}, n::Base.Integer) where U<:scalar_types_extended = PointVector{U}(p.(zeros(Int, n)))
@@ -63,6 +66,9 @@ end
 Base.firstindex(::RayVector) = 1
 Base.lastindex(iter::RayVector) = length(iter)
 Base.size(po::RayVector) = size(po.p)
+
+# Forward multiplication with oscar matrices.
+Base.:*(A::MatElem, v::RayVector) = A*v.p
 
 RayVector{U}(p::Union{Field, ZZRing}, v::AbstractVector) where U<:scalar_types_extended = RayVector{U}(p.(v))
 
@@ -241,14 +247,14 @@ Additional data required for specifying the property can be given using
 keyword arguments.
 """
 struct SubObjectIterator{T} <: AbstractVector{T}
-    Obj::PolyhedralObject
+    Obj::PolyhedralObjectUnion
     Acc::Function
     n::Int
     options::NamedTuple
 end
 
 # `options` is empty by default
-SubObjectIterator{T}(Obj::PolyhedralObject, Acc::Function, n::Base.Integer) where T = SubObjectIterator{T}(Obj, Acc, n, NamedTuple())
+SubObjectIterator{T}(Obj::PolyhedralObjectUnion, Acc::Function, n::Base.Integer) where T = SubObjectIterator{T}(Obj, Acc, n, NamedTuple())
 
 Base.IndexStyle(::Type{<:SubObjectIterator}) = IndexLinear()
 
@@ -269,7 +275,7 @@ for (sym, name) in (("facet_indices", "Incidence matrix resp. facets"), ("ray_in
     _M = Symbol("_", sym)
     @eval begin
         $M(iter::SubObjectIterator) = $_M(Val(iter.Acc), iter.Obj; iter.options...)
-        $_M(::Any, ::PolyhedralObject) = throw(ArgumentError(string($name, " not defined in this context.")))
+        $_M(::Any, ::PolyhedralObjectUnion) = throw(ArgumentError(string($name, " not defined in this context.")))
     end
 end
 
@@ -281,7 +287,7 @@ for (sym, name) in (("point_matrix", "Point Matrix"), ("vector_matrix", "Vector 
         $M(iter::SubObjectIterator{<:AbstractVector{QQFieldElem}}) = matrix(QQ, $_M(Val(iter.Acc), iter.Obj; iter.options...))
         $M(iter::SubObjectIterator{<:AbstractVector{ZZRingElem}}) = matrix(ZZ, $_M(Val(iter.Acc), iter.Obj; iter.options...))
         $M(iter::SubObjectIterator{<:AbstractVector{<:FieldElem}}) = matrix(coefficient_field(iter.Obj), $_M(Val(iter.Acc), iter.Obj; iter.options...))
-        $_M(::Any, ::PolyhedralObject) = throw(ArgumentError(string($name, " not defined in this context.")))
+        $_M(::Any, ::PolyhedralObjectUnion) = throw(ArgumentError(string($name, " not defined in this context.")))
     end
 end
 
@@ -308,6 +314,9 @@ matrix(R::ZZRing, iter::SubObjectIterator{<:Union{RayVector{ZZRingElem},PointVec
     matrix(R, matrix_for_polymake(iter))
 matrix(R::QQField, iter::SubObjectIterator{<:Union{RayVector{QQFieldElem}, PointVector{QQFieldElem}}}) =
     matrix(R, matrix_for_polymake(iter))
+matrix(K, iter::SubObjectIterator{<:Union{RayVector{<:FieldElem}, PointVector{<:FieldElem}}}) =
+    matrix(K, matrix_for_polymake(iter))
+
 
 function linear_matrix_for_polymake(iter::SubObjectIterator)
     if hasmethod(_linear_matrix_for_polymake, Tuple{Val{iter.Acc}})
@@ -366,14 +375,14 @@ _ambient_dim(x::SubObjectIterator) = Polymake.polytope.ambient_dim(pm_object(x.O
 
 _empty_access() = nothing
 
-function _empty_subobjectiterator(::Type{T}, Obj::PolyhedralObject) where T
+function _empty_subobjectiterator(::Type{T}, Obj::PolyhedralObjectUnion) where T
     return SubObjectIterator{T}(Obj, _empty_access, 0, NamedTuple())
 end
 
 for f in ("_point_matrix", "_vector_matrix", "_generator_matrix")
     M = Symbol(f)
     @eval begin
-        function $M(::Val{_empty_access}, P::PolyhedralObject; homogenized=false)
+        function $M(::Val{_empty_access}, P::PolyhedralObjectUnion; homogenized=false)
             scalar_regexp = match(r"[^<]*<(.*)>[^>]*", String(Polymake.type_name(pm_object(P))))
             typename = scalar_regexp[1]
             T = _scalar_type_to_polymake(scalar_type_to_oscar[typename])
@@ -385,14 +394,14 @@ end
 for f in ("_facet_indices", "_ray_indices", "_vertex_indices", "_vertex_and_ray_indices")
     M = Symbol(f)
     @eval begin
-        $M(::Val{_empty_access}, P::PolyhedralObject) = return Polymake.IncidenceMatrix(0, Polymake.polytope.ambient_dim(P))
+        $M(::Val{_empty_access}, P::PolyhedralObjectUnion) = return Polymake.IncidenceMatrix(0, Polymake.polytope.ambient_dim(P))
     end
 end
 
 for f in ("_linear_inequality_matrix", "_linear_equation_matrix")
     M = Symbol(f)
     @eval begin
-        function $M(::Val{_empty_access}, P::PolyhedralObject)
+        function $M(::Val{_empty_access}, P::PolyhedralObjectUnion)
             scalar_regexp = match(r"[^<]*<(.*)>[^>]*", String(Polymake.type_name(P)))
             typename = scalar_regexp[1]
             T = _scalar_type_to_polymake(scalar_type_to_oscar[typename])
@@ -404,7 +413,7 @@ end
 for f in ("_affine_inequality_matrix", "_affine_equation_matrix")
     M = Symbol(f)
     @eval begin
-        function $M(::Val{_empty_access}, P::PolyhedralObject)
+        function $M(::Val{_empty_access}, P::PolyhedralObjectUnion)
             scalar_regexp = match(r"[^<]*<(.*)>[^>]*", String(Polymake.type_name(P)))
             typename = scalar_regexp[1]
             T = _scalar_type_to_polymake(scalar_type_to_oscar[typename])

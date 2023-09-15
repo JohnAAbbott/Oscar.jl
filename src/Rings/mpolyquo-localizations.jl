@@ -106,14 +106,11 @@ multiplicative set ``S ⊂ P`` of type `MultSetType`.
 end
 
 ### for convenience of later use
-MPAnyQuoRing = Union{MPolyQuoLocRing, 
-                MPolyQuoRing
-               }
+const MPAnyQuoRing = Union{MPolyQuoLocRing, MPolyQuoRing}
 
-MPAnyNonQuoRing = Union{MPolyRing, MPolyLocRing
-                  }
+const MPAnyNonQuoRing = Union{MPolyRing, MPolyLocRing}
 
-MPolyAnyRing = Union{MPolyRing, MPolyQuoRing,
+const MPolyAnyRing = Union{MPolyRing, MPolyQuoRing,
                 MPolyLocRing,MPolyQuoLocRing
                }
 
@@ -1363,11 +1360,11 @@ function is_isomorphism(
   j2 = hom(B, C, B_vars, check=false)
   G = ideal(C, [j1(gen(A, i)) - j2(imagesB[i]) for i in 1:ngens(A)]) + ideal(C, j2.(gens(J))) + ideal(C, j1.(gens(I)))
   singC, _ = Singular.polynomial_ring(Oscar.singular_coeff_ring(base_ring(C)), 
-				  symbols(C),
-				  ordering=Singular.ordering_dp(1)
-				  *Singular.ordering_dp(nvars(B)-1)
-				  *Singular.ordering_dp(1)
-				  *Singular.ordering_dp(nvars(A)-1))
+            symbols(C),
+            ordering=Singular.ordering_dp(1)
+                    *Singular.ordering_dp(nvars(B)-1)
+                    *Singular.ordering_dp(1)
+                    *Singular.ordering_dp(nvars(A)-1))
   # TODO: adjust this to the orderings used for the previous groebner basis 
   # computations in A and B once such things are respected. 
   singG = Singular.Ideal(singC, singC.(gens(G)))
@@ -1613,7 +1610,7 @@ pre_image_ideal(I::MPolyQuoLocalizedIdeal) = I.J
 ngens(I::MPolyQuoLocalizedIdeal) = length(I.gens)
 
 ### a shorthand notation for any MPolyIdeal 
-MPolyAnyIdeal = Union{MPolyIdeal, MPolyQuoIdeal,
+const MPolyAnyIdeal = Union{MPolyIdeal, MPolyQuoIdeal,
                  MPolyLocalizedIdeal, MPolyQuoLocalizedIdeal
                 }
 

@@ -214,10 +214,10 @@ mutable struct MPolyComplementOfPrimeIdeal{
 
   function MPolyComplementOfPrimeIdeal(
       P::MPolyIdeal{RingElemType}; 
-      check::Bool=false
+      check::Bool=true
     ) where {RingElemType}
     R = base_ring(P)
-    check && (is_prime(P) || error("the ideal $P is not prime"))
+    @check is_prime(P) "the ideal $P is not prime"
     return new{typeof(coefficient_ring(R)), elem_type(coefficient_ring(R)), typeof(R), elem_type(R)}(R, P)
   end
 end
@@ -321,6 +321,7 @@ mutable struct MPolyComplementOfKPointIdeal{
   R::RingType
   # The coordinates aᵢ of the point in 𝕜ⁿ corresponding to the maximal ideal
   a::Vector{BaseRingElemType}
+  m::MPolyIdeal # Field for caching the associated maximal ideal
 
   function MPolyComplementOfKPointIdeal(R::RingType, a::Vector{T}) where {RingType<:MPolyRing, T<:RingElement}
     length(a) == ngens(R) || error("the number of variables in the ring does not coincide with the number of coordinates")
@@ -331,6 +332,33 @@ mutable struct MPolyComplementOfKPointIdeal{
     return S
   end
 end
+
+# A function with this name exists with a method for 
+# MPolyComplementOfPrimeIdeal. In order to treat them in 
+# parallel, we introduce the analogous method here. 
+function prime_ideal(S::MPolyComplementOfKPointIdeal) 
+  kk = coefficient_ring(ambient_ring(S))
+  # TODO: Test whether kk is an integral domain
+  if !isdefined(S, :m)
+    R = ambient_ring(S)
+    x = gens(R)
+    n = ngens(R)
+    m = ideal(R, [x[i]-a for (i, a) in enumerate(point_coordinates(S))])
+    set_attribute!(m, :is_prime=>true)
+    kk isa Field && set_attribute!(m, :is_maximal=>true)
+    set_attribute!(m, :dim=>dim(coefficient_ring(ambient_ring(S))))
+    S.m = m
+  end
+  return S.m
+end
+
+function is_prime(P::Hecke.ZZIdl) 
+  return is_prime(first(gens(P)))
+end
+
+dim(kk::Field) = 0
+
+maximal_ideal(S::MPolyComplementOfKPointIdeal{<:Field}) = prime_ideal(S)
 
 @doc raw"""  
     complement_of_point_ideal(R::MPolyRing, a::Vector)
@@ -355,13 +383,13 @@ Complement
 complement_of_point_ideal(R::MPolyRing, a::Vector) = MPolyComplementOfKPointIdeal(R, a)
 
 @doc raw"""
-    complement_of_prime_ideal(P::MPolyIdeal; check::Bool=false)
+    complement_of_prime_ideal(P::MPolyIdeal; check::Bool=true)
 
 Given a prime ideal ``P`` of a polynomial ring ``R``, say,
 return the multiplicatively closed subset ``R\setminus P.``
 
 !!! note
-    If  `check` is set to `true`, the function checks whether ``P`` is indeed a prime ideal. 
+    Since  `check` is set to `true`, the function checks whether ``P`` is indeed a prime ideal. 
 
     This may take some time.
 
@@ -378,7 +406,7 @@ Complement
   in multivariate polynomial ring in 3 variables over QQ
 ```
 """
-complement_of_prime_ideal(P::MPolyIdeal; check::Bool=false) = MPolyComplementOfPrimeIdeal(P; check)
+complement_of_prime_ideal(P::MPolyIdeal; check::Bool=true) = MPolyComplementOfPrimeIdeal(P; check)
 
 @doc raw"""  
     powers_of_element(f::MPolyRingElem)
@@ -539,8 +567,8 @@ function Base.in(
     tmp_result = false
     for s in U
       if fac[1] in s 
-	tmp_result = true
-	break
+        tmp_result = true
+        break
       end
     end
     tmp_result || return false
@@ -884,8 +912,8 @@ function product(T::MST, U::MST) where {MST<:MPolyProductOfMultSets}
     push!(new_sets, S)
     for V in sets(U)
       if issubset(S, V) 
-	pop!(new_sets)
-	break
+        pop!(new_sets)
+        break
       end
     end
   end
@@ -894,8 +922,8 @@ function product(T::MST, U::MST) where {MST<:MPolyProductOfMultSets}
     push!(new_sets, V)
     for U in new_sets[1:n]
       if issubset(V, U) 
-	pop!(new_sets)
-	break
+        pop!(new_sets)
+        break
       end
     end
   end
@@ -1178,7 +1206,7 @@ function Localization(
 end
 
 ### additional constructors
-MPolyLocRing(R::RingType, P::MPolyIdeal{RingElemType}) where {RingType, RingElemType} = MPolyLocRing(R, MPolyComplementOfPrimeIdeal(P))
+MPolyLocRing(R::RingType, P::MPolyIdeal{RingElemType}; check::Bool=true) where {RingType, RingElemType} = MPolyLocRing(R, MPolyComplementOfPrimeIdeal(P); check)
 
 Localization(R::MPolyRing, v::Vector{T}) where {T<:MPolyRingElem} = Localization(MPolyPowersOfElement(R, v))
 
@@ -1261,7 +1289,7 @@ mutable struct MPolyLocRingElem{
       check::Bool=true
     ) where {BaseRingType, BaseRingElemType, RingType, RingElemType, MultSetType}
     base_ring(parent(f)) == base_ring(W) || error(
-	"the numerator and denominator of the given fraction do not belong to the original ring before localization"
+      "the numerator and denominator of the given fraction do not belong to the original ring before localization"
       )
     @check begin
       if !iszero(f) && !is_unit(denominator(f))
@@ -2579,7 +2607,7 @@ quintuple ``(A, I, d, ϕ, θ)`` consisting of
 """
 function as_affine_algebra(
     L::MPolyLocRing{BRT, BRET, RT, RET, 
-			     MPolyPowersOfElement{BRT, BRET, RT, RET}}; 
+               MPolyPowersOfElement{BRT, BRET, RT, RET}}; 
     inverse_name::VarName=:_0
   ) where {BRT, BRET, RT, RET}
   R = base_ring(L)
