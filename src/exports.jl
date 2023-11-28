@@ -32,7 +32,9 @@ export AffineAlgebraicSet
 export AffineHalfspace
 export AffineHyperplane
 export AffineNormalToricVariety
+export AffinePlaneCurve
 export AffineVariety
+export arithmetic_genus
 export AutomorphismGroup
 export AutomorphismGroupElem
 export BettiTable
@@ -138,6 +140,8 @@ export Polyhedron
 export Polymake
 export PrincipalOpenSubset
 export ProjectiveAlgebraicSet
+export ProjectiveCurve
+export ProjectivePlaneCurve
 export ProjectiveScheme
 export ProjectiveSchemeMor
 export ProjectiveVariety
@@ -199,6 +203,7 @@ export add_glueing!
 export add_vertex!
 export add_vertices!
 export adjacent_chamber
+export adjoint_ideal
 export affine_algebra
 export affine_charts
 export affine_cone
@@ -329,6 +334,7 @@ export class_parameters
 export class_positions_of_center
 export class_positions_of_derived_subgroup
 export class_positions_of_kernel
+export class_positions_of_normal_subgroups
 export class_positions_of_pcore
 export class_positions_of_solvable_residuum
 export closed_subvariety_of_toric_variety
@@ -358,6 +364,7 @@ export column
 export combinatorial_symmetries
 export comm
 export comm!
+export common_components
 export common_denominator
 export common_refinement
 export complement
@@ -432,9 +439,11 @@ export decoration
 export default_covering
 export default_ordering
 export defines_automorphism
+export defining_equation
 export defining_ideal
 export defining_ring_element
 export defining_ring_elements
+export deginvlex
 export deglex
 export degree
 export degrees_of_generators
@@ -579,8 +588,10 @@ export generating_system
 export generator_matrix
 export generic_fraction
 export generic_fractions
+export generic_section
 export gens, has_gens
 export gens_of_rational_equivalence_classes
+export geometric_genus
 export geometric_irreducible_components
 export germ_at_point
 export girth
@@ -713,6 +724,7 @@ export integrate
 export interior_lattice_points
 export intersect
 export intersection_form
+export intersection_multiplicity
 export intersections
 export inv
 export inv!
@@ -725,7 +737,9 @@ export invariant_sesquilinear_forms
 export invariant_symmetric_forms
 export inverse
 export invert
+export invert_birational_map
 export inverted_set
+export invlex
 export irreducible_components
 export irreducible_secondary_invariants
 export irreducibles
@@ -869,6 +883,7 @@ export is_surjective
 export is_ternary
 export is_total
 export is_transitive
+export is_transverse_intersection
 export is_trivial
 export is_two_sided
 export is_unipotent
@@ -1010,6 +1025,7 @@ export molien_series
 export monomial_basis
 export monomial_ordering
 export monomials
+export monomials_of_degree
 export mori_cone
 export morphism_from_cox_variety
 export MorphismFromRationalFunctions
@@ -1034,6 +1050,7 @@ export multiplication_induced_morphism
 export multiplication_morphism
 export multiplicative_jordan_decomposition
 export multiplicities_eigenvalues
+export multiplicity
 export n_cones
 export n_connected_components
 export n_gon
@@ -1050,8 +1067,8 @@ export nef_cone
 export negbias
 export negdeglex
 export negdegrevlex
+export neginvlex
 export neglex
-export negrevlex
 export negwdeglex
 export negwdegrevlex
 export neighbor_patches
@@ -1131,6 +1148,8 @@ export outneighbors
 export p_central_series
 export pappus_matroid
 export parallel_extension
+export parametrization
+export parametrization_conic
 export parent
 export patches
 export pbw_algebra
@@ -1152,6 +1171,7 @@ export picard_group
 export picard_index
 export pile_polytope
 export pitman_stanley_polytope
+export plane_curve
 export platonic_solid
 export point_coordinates
 export point_matrix
@@ -1196,6 +1216,8 @@ export projective_general_linear_group
 export projective_geometry
 export projective_omega_group
 export projective_orthogonal_group
+export projective_closure
+export projective_curve
 export projective_plane
 export projective_scheme
 export projective_space
@@ -1230,6 +1252,7 @@ export random_affine_linear_polynomials
 export rank
 export rank_action
 export rational_equivalence_class
+export rational_point_conic
 export rational_point_coordinates
 export rational_solutions
 export rational_to_continued_fraction_hirzebruch_jung
@@ -1284,7 +1307,6 @@ export restriction_map
 export restrictions
 export reverse
 export reverse_direction!
-export revlex
 export revlex_basis_encoding
 export reynolds_operator
 export right_acting_group
@@ -1402,6 +1424,7 @@ export syz
 export syzygy_generators
 export tail
 export tangent_space
+export tangent_lines
 export tensor_product
 export terms
 export tetrahedron

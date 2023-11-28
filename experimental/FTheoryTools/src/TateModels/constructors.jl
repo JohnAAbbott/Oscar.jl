@@ -28,15 +28,15 @@ The only difference is that the Tate sections ``a_i`` can be specified with non-
 julia> base = sample_toric_variety()
 Normal toric variety
 
-julia> a1 = sum([rand(Int) * b for b in basis_of_global_sections(anticanonical_bundle(base))]);
+julia> a1 = generic_section(anticanonical_bundle(base));
 
-julia> a2 = sum([rand(Int) * b for b in basis_of_global_sections(anticanonical_bundle(base)^2)]);
+julia> a2 = generic_section(anticanonical_bundle(base)^2);
 
-julia> a3 = sum([rand(Int) * b for b in basis_of_global_sections(anticanonical_bundle(base)^3)]);
+julia> a3 = generic_section(anticanonical_bundle(base)^3);
 
-julia> a4 = sum([rand(Int) * b for b in basis_of_global_sections(anticanonical_bundle(base)^4)]);
+julia> a4 = generic_section(anticanonical_bundle(base)^4);
 
-julia> a6 = sum([rand(Int) * b for b in basis_of_global_sections(anticanonical_bundle(base)^6)]);
+julia> a6 = generic_section(anticanonical_bundle(base)^6);
 
 julia> t = global_tate_model(base, [a1, a2, a3, a4, a6]; completeness_check = false)
 Global Tate model over a concrete base
@@ -66,6 +66,7 @@ function global_tate_model(base::NormalToricVariety, ais::Vector{T}; completenes
   pt = _tate_polynomial(ais, cox_ring(ambient_space))
   model = GlobalTateModel(ais[1], ais[2], ais[3], ais[4], ais[5], pt, base, ambient_space)
   set_attribute!(model, :base_fully_specified, true)
+  set_attribute!(model, :partially_resolved, false)
   return model
 end
 
@@ -185,6 +186,7 @@ function global_tate_model(auxiliary_base_ring::MPolyRing, auxiliary_base_gradin
   pt = _tate_polynomial([a1, a2, a3, a4, a6], R)
   model = GlobalTateModel(a1, a2, a3, a4, a6, pt, auxiliary_base_space, auxiliary_ambient_space)
   set_attribute!(model, :base_fully_specified, false)
+  set_attribute!(model, :partially_resolved, false)
   return model
 end
 
@@ -195,7 +197,12 @@ end
 ################################################
 
 function Base.show(io::IO, t::GlobalTateModel)
-  properties_string = ["Global Tate model over a"]
+  properties_string = String[]
+  if is_partially_resolved(t)
+    push!(properties_string, "Partially resolved global Tate model over a")
+  else
+    push!(properties_string, "Global Tate model over a")
+  end
   if base_fully_specified(t)
     push!(properties_string, "concrete base")
   else
